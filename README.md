@@ -17,17 +17,16 @@ cd surf-mcp
 bun install
 ```
 
-### Configure your MCP client
+### Quick start (no install)
 
-Add to your MCP client config (Claude Code, Claude Desktop, Cursor, etc.):
+Add to your MCP client config — no clone or install needed:
 
-**Claude Code** (`~/.claude/settings.json`):
 ```json
 {
   "mcpServers": {
     "surf": {
-      "command": "bun",
-      "args": ["run", "/path/to/surf-mcp/src/index.ts"],
+      "command": "bunx",
+      "args": ["@surf-ai/surf-mcp"],
       "env": {
         "SURF_API_KEY": "your-api-key"
       }
@@ -36,7 +35,21 @@ Add to your MCP client config (Claude Code, Claude Desktop, Cursor, etc.):
 }
 ```
 
-**Claude Desktop** (`claude_desktop_config.json`):
+### Config file locations
+
+- **Claude Code**: `.mcp.json` in project root or `~/.claude.json`
+- **Claude Desktop**: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
+- **Cursor**: MCP settings in the IDE
+
+### From source
+
+```bash
+git clone https://github.com/asksurf-ai/surf-mcp.git
+cd surf-mcp
+bun install
+```
+
+Then point your MCP config to the local source:
 ```json
 {
   "mcpServers": {

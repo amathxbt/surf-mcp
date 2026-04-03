@@ -1,15 +1,23 @@
 {
-  "name": "surf-mcp",
+  "name": "@surf-ai/surf-mcp",
   "version": "0.1.0",
   "type": "module",
-  "private": true,
+  "description": "MCP server for Surf crypto data API",
+  "bin": {
+    "surf-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "start": "bun run src/index.ts",
+    "build": "tsup",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "tsup": "^8.5.1"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -18,5 +26,16 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@surf-ai/sdk": "1.0.0-alpha.13",
     "zod": "^4.3.6"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asksurf-ai/surf-mcp"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "crypto",
+    "surf",
+    "model-context-protocol"
+  ]
 }

@@ -1,0 +1,93 @@
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install & build
+        run: |
+          bun install
+          bun run build
+          bun run typecheck
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Parse version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          if [[ "$VERSION" == *"-alpha"* ]]; then
+            echo "npm_tag=alpha" >> "$GITHUB_OUTPUT"
+          elif [[ "$VERSION" == *"-beta"* ]]; then
+            echo "npm_tag=beta" >> "$GITHUB_OUTPUT"
+          elif [[ "$VERSION" == *"-rc"* ]]; then
+            echo "npm_tag=rc" >> "$GITHUB_OUTPUT"
+          else
+            echo "npm_tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "Version: $VERSION"
+          echo "npm tag: $(grep npm_tag "$GITHUB_OUTPUT" | cut -d= -f2)"
+
+      - name: Stamp version
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          jq --arg v "$VERSION" '.version = $v' package.json > tmp && mv tmp package.json
+          echo "Stamped package.json → $VERSION"
+
+      - name: Build & publish
+        run: |
+          bun install
+          bun run build
+          npm publish --access public --tag ${{ steps.version.outputs.npm_tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit version bump
+        continue-on-error: true
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git pull origin main
+          jq --arg v "$VERSION" '.version = $v' package.json > tmp && mv tmp package.json
+          git add package.json
+          git diff --cached --quiet || {
+            git commit -m "chore: release v${VERSION}"
+            git push origin main
+          }
+
+      - name: Summary
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.npm_tag }}"
+          echo "## Published v${VERSION} (npm tag: ${TAG})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`@surf-ai/surf-mcp@${VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
