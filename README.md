@@ -2,24 +2,25 @@
 
 MCP server for the [Surf](https://ask.surf) crypto data API. Dynamically generates tools from the OpenAPI spec — 12 grouped tools covering 86 endpoints across market data, wallets, social, on-chain queries, and more.
 
-## Setup
-
-### Prerequisites
-
-- [Bun](https://bun.sh) runtime
-- A Surf API key ([get one here](https://ask.surf))
-
-### Install
-
-```bash
-git clone https://github.com/asksurf-ai/surf-mcp.git
-cd surf-mcp
-bun install
-```
-
-### Quick start (no install)
+## Quick start
 
 Add to your MCP client config — no clone or install needed:
+
+```json
+{
+  "mcpServers": {
+    "surf": {
+      "command": "npx",
+      "args": ["-y", "@surf-ai/surf-mcp"],
+      "env": {
+        "SURF_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
+Or with [Bun](https://bun.sh):
 
 ```json
 {
@@ -35,34 +36,16 @@ Add to your MCP client config — no clone or install needed:
 }
 ```
 
+### Prerequisites
+
+- A Surf API key ([get one here](https://ask.surf))
+- Node.js 20+ or [Bun](https://bun.sh)
+
 ### Config file locations
 
 - **Claude Code**: `.mcp.json` in project root or `~/.claude.json`
 - **Claude Desktop**: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 - **Cursor**: MCP settings in the IDE
-
-### From source
-
-```bash
-git clone https://github.com/asksurf-ai/surf-mcp.git
-cd surf-mcp
-bun install
-```
-
-Then point your MCP config to the local source:
-```json
-{
-  "mcpServers": {
-    "surf": {
-      "command": "bun",
-      "args": ["run", "/path/to/surf-mcp/src/index.ts"],
-      "env": {
-        "SURF_API_KEY": "your-api-key"
-      }
-    }
-  }
-}
-```
 
 ## Tools
 
@@ -87,29 +70,12 @@ The server exposes 12 tools, one per API domain. Each tool accepts a `command` a
 
 Once configured, your AI assistant can use the tools directly:
 
-**Get BTC price history:**
 ```
-surf_market({ command: "price", params: { symbol: "BTC", time_range: "7d" } })
-```
-
-**Check a wallet:**
-```
-surf_wallet({ command: "detail", params: { address: "vitalik.eth", chain: "ethereum" } })
-```
-
-**Search for projects:**
-```
-surf_search({ command: "project", params: { q: "defi lending", limit: 5 } })
-```
-
-**Run on-chain SQL:**
-```
-surf_onchain({ command: "sql", params: { sql: "SELECT * FROM agent.ethereum_transactions LIMIT 10" } })
-```
-
-**Get social sentiment:**
-```
-surf_social({ command: "detail", params: { q: "ethereum", time_range: "7d" } })
+"What's the BTC price?"        → surf_market({ command: "price", params: { symbol: "BTC" } })
+"Check vitalik's wallet"       → surf_wallet({ command: "detail", params: { address: "vitalik.eth" } })
+"Search for DeFi projects"     → surf_search({ command: "project", params: { q: "defi lending" } })
+"Run an on-chain SQL query"    → surf_onchain({ command: "sql", params: { sql: "SELECT ..." } })
+"ETH social sentiment"         → surf_social({ command: "detail", params: { q: "ethereum" } })
 ```
 
 ## How it works
@@ -121,7 +87,7 @@ On startup, the server:
 3. Registers one MCP tool per tag with auto-generated descriptions and command enums
 4. Routes tool calls through `@surf-ai/sdk` for HTTP transport and auth
 
-This means the server automatically picks up new API endpoints when the spec is updated — just restart.
+The server automatically picks up new API endpoints when the spec is updated — just restart.
 
 ## Example: AI agent
 
@@ -131,16 +97,12 @@ The repo includes a simple agent that connects Claude to surf-mcp tools in an ag
 ANTHROPIC_API_KEY=your-key SURF_API_KEY=your-key bun run examples/agent.ts "What's the BTC price and fear & greed index?"
 ```
 
-The agent:
-1. Starts the MCP server as a subprocess
-2. Lists available tools and converts them to Claude's tool format
-3. Sends the user's question to Claude with all surf tools available
-4. Executes any tool calls via MCP and feeds results back to Claude
-5. Repeats until Claude produces a final text response
-
 ## Development
 
 ```bash
+git clone https://github.com/asksurf-ai/surf-mcp.git
+cd surf-mcp
+bun install
 bun run start                # Run the server
 bun run typecheck            # Type check
 ```
