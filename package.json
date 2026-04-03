@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.82.0",
     "@types/bun": "latest"
   },
   "peerDependencies": {
